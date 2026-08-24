@@ -1,0 +1,127 @@
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import DashboardLayout from "../../components/common/DashboardLayout";
+import { useApi } from "../../hooks/useApi";
+import { RESOURCES } from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
+import { formatVND } from "../../utils/formatCurrency";
+import { formatDate } from "../../utils/formatDate";
+import { PAYMENT_METHODS } from "../../constants/paymentStatus";
+
+export default function Payment() {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { items: vehicles } = useApi(RESOURCES.VEHICLES);
+  const { create } = useApi(RESOURCES.ORDERS);
+
+  const [method, setMethod] = useState("card");
+  const [submitting, setSubmitting] = useState(false);
+  const [orderId, setOrderId] = useState(null);
+
+  const vehicle = state ? vehicles.find((v) => String(v.id) === String(state.vehicleId)) : null;
+
+  if (!state || !vehicle) {
+    return (
+      <DashboardLayout title="Thanh toán">
+        <div className="empty">
+          <h3>Chưa có thông tin đặt xe</h3>
+          <p>Vui lòng chọn xe và thời gian thuê trước khi thanh toán.</p>
+          <div className="mt-16"><Link to="/customer/search" className="btn btn-signal">Tìm xe ngay</Link></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  async function handleConfirm() {
+    setSubmitting(true);
+    try {
+      const order = await create({
+        customerId: user.id,
+        vehicleId: vehicle.id,
+        startDate: state.startDate,
+        endDate: state.endDate,
+        totalPrice: state.total,
+        status: "pending",
+        paymentStatus: method === "cash" ? "unpaid" : "paid",
+        paymentMethod: method,
+        promoCode: state.promoCode,
+      });
+      setOrderId(order.id);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (orderId) {
+    return (
+      <DashboardLayout title="Đặt xe thành công">
+        <div className="card" style={{ maxWidth: 480, textAlign: "center", padding: 40 }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+          <h2 style={{ marginBottom: 8 }}>Đặt xe thành công!</h2>
+          <p className="text-muted text-sm mb-16">Đơn thuê {vehicle.name} của bạn đang chờ nhà cung cấp xác nhận.</p>
+          <div className="flex gap-8" style={{ justifyContent: "center" }}>
+            <button className="btn btn-signal" onClick={() => navigate(`/customer/orders/${orderId}`)}>Xem đơn hàng</button>
+            <button className="btn btn-outline" onClick={() => navigate("/customer/search")}>Tìm xe khác</button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout title="Thanh toán" subtitle="Bước 2/2 · Xác nhận và thanh toán">
+      <div className="detail-hero">
+        <div className="card">
+          <h3 style={{ fontSize: 16, marginBottom: 14 }}>Chọn phương thức thanh toán</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {PAYMENT_METHODS.map((m) => (
+              <label
+                key={m.value}
+                className="card"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: 12,
+                  cursor: "pointer",
+                  borderColor: method === m.value ? "var(--signal)" : "var(--line)",
+                }}
+              >
+                <input type="radio" name="method" checked={method === m.value} onChange={() => setMethod(m.value)} />
+                {m.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h3 style={{ fontSize: 16, marginBottom: 14 }}>Tóm tắt đơn thuê</h3>
+          <div className="text-sm mb-8"><strong>{vehicle.name}</strong></div>
+          <div className="text-sm text-muted mb-16">{formatDate(state.startDate)} → {formatDate(state.endDate)} ({state.days} ngày)</div>
+
+          <div className="lane-divider mb-16" style={{ opacity: 0.4 }} />
+
+          <div className="flex-between text-sm mb-8">
+            <span className="text-muted">Tạm tính</span>
+            <span className="mono">{formatVND(state.subtotal)}</span>
+          </div>
+          {state.discount > 0 && (
+            <div className="flex-between text-sm mb-8" style={{ color: "var(--success)" }}>
+              <span>Giảm giá ({state.promoCode})</span>
+              <span className="mono">-{formatVND(state.discount)}</span>
+            </div>
+          )}
+          <div className="flex-between mb-16" style={{ fontWeight: 700, fontSize: 16 }}>
+            <span>Tổng thanh toán</span>
+            <span className="mono">{formatVND(state.total)}</span>
+          </div>
+
+          <button className="btn btn-signal btn-block" disabled={submitting} onClick={handleConfirm}>
+            {submitting ? "Đang xử lý..." : `Xác nhận thanh toán ${formatVND(state.total)}`}
+          </button>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
