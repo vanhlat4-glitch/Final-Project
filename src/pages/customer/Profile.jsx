@@ -3,6 +3,8 @@ import DashboardLayout from "../../components/common/DashboardLayout";
 import { useAuth } from "../../hooks/useAuth";
 import { useApi } from "../../hooks/useApi";
 import { RESOURCES } from "../../services/api";
+import { initials } from "../../utils/formatDate";
+import AvatarModal from "../../components/common/AvatarModal";
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
@@ -10,12 +12,13 @@ export default function Profile() {
   const [form, setForm] = useState({ name: user.name || "", phone: user.phone || "", address: user.address || "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     try {
-      await update(user.id, form);
+      await update(user.id || user._id, form);
       updateProfile(form);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -28,6 +31,35 @@ export default function Profile() {
     <DashboardLayout title="Tài khoản của tôi" subtitle="Xem và chỉnh sửa thông tin cá nhân">
       <div className="card" style={{ maxWidth: 480 }}>
         {saved && <div className="form-success">Đã cập nhật thông tin tài khoản.</div>}
+
+        {/* Avatar Profile Section */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, paddingBottom: 18, borderBottom: "1px solid var(--line)" }}>
+          <div style={{ position: "relative" }}>
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--signal)" }}
+              />
+            ) : (
+              <div className="avatar" style={{ width: 68, height: 68, fontSize: 24 }}>
+                {initials(user?.name || "?")}
+              </div>
+            )}
+          </div>
+          <div>
+            <strong style={{ fontSize: 16, display: "block" }}>Ảnh đại diện</strong>
+            <p className="text-muted text-sm" style={{ marginBottom: 8 }}>Tải ảnh cá nhân hoặc chọn ảnh mẫu</p>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setAvatarModalOpen(true)}
+            >
+              📷 Đổi ảnh đại diện
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="field">
             <label>Họ và tên</label>
@@ -48,6 +80,8 @@ export default function Profile() {
           <button className="btn btn-signal" disabled={saving}>{saving ? "Đang lưu..." : "Lưu thay đổi"}</button>
         </form>
       </div>
+
+      <AvatarModal open={avatarModalOpen} onClose={() => setAvatarModalOpen(false)} />
     </DashboardLayout>
   );
 }
