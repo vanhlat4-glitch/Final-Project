@@ -13,7 +13,11 @@ import { VEHICLE_STATUS_LABEL, VEHICLE_STATUS_TONE } from "../../constants/vehic
 const FIELDS = [
   { name: "name", label: "Tên xe", required: true },
   { row: [
+    { name: "brand", label: "Hãng xe", required: true },
     { name: "type", label: "Loại xe", required: true },
+  ] },
+  { row: [
+    { name: "pricePerHour", label: "Giá/giờ (₫)", type: "number", required: true },
     { name: "pricePerDay", label: "Giá/ngày (₫)", type: "number", required: true },
   ] },
   { name: "location", label: "Khu vực" },
@@ -26,12 +30,12 @@ export default function VehicleManagement() {
   const [modal, setModal] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const providerName = (id) => providers.find((p) => String(p.id) === String(id))?.name || "—";
+  const providerName = (id) => providers.find((p) => String(p.id || p._id) === String(id))?.name || "—";
 
   async function handleSave() {
     setSaving(true);
     try {
-      await update(modal.data.id, modal.data);
+      await update(modal.data.id || modal.data._id, modal.data);
       setModal(null);
     } finally {
       setSaving(false);
@@ -39,7 +43,7 @@ export default function VehicleManagement() {
   }
 
   async function handleDelete(row) {
-    if (confirm(`Xoá xe "${row.name}" khỏi hệ thống?`)) await remove(row.id);
+    if (confirm(`Xoá xe "${row.name}" khỏi hệ thống?`)) await remove(row.id || row._id);
   }
 
   return (
@@ -57,9 +61,19 @@ export default function VehicleManagement() {
         emptyTitle="Chưa có xe nào trong hệ thống"
         columns={[
           { key: "name", label: "Tên xe", render: (r) => <strong>{r.name}</strong> },
+          { key: "brand", label: "Hãng", render: (r) => <span>{r.brand || "—"}</span> },
           { key: "provider", label: "Nhà cung cấp", render: (r) => providerName(r.providerId) },
           { key: "type", label: "Loại" },
-          { key: "pricePerDay", label: "Giá/ngày", render: (r) => <span className="mono">{formatVND(r.pricePerDay)}</span> },
+          {
+            key: "price",
+            label: "Giá thuê",
+            render: (r) => (
+              <div>
+                <span className="mono" style={{ color: "var(--signal-dark)", fontWeight: 600 }}>{formatVND(r.pricePerHour || Math.round(r.pricePerDay / 9))}/h</span>
+                <span className="text-muted text-sm"> · {formatVND(r.pricePerDay)}/ngày</span>
+              </div>
+            ),
+          },
           { key: "status", label: "Trạng thái", render: (r) => <Badge tone={VEHICLE_STATUS_TONE[r.status]}>{VEHICLE_STATUS_LABEL[r.status]}</Badge> },
         ]}
         renderActions={(row) => (

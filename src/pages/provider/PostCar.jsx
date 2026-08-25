@@ -38,16 +38,17 @@ const FIELDS = [
     },
   ] },
   { row: [
+    { name: "pricePerHour", label: "Giá thuê / giờ (₫)", type: "number", required: true, placeholder: "75000" },
     { name: "pricePerDay", label: "Giá thuê / ngày (₫)", type: "number", required: true, placeholder: "700000" },
-    { name: "location", label: "Khu vực", required: true, placeholder: "VD: Hà Nội" },
   ] },
-  { name: "image", label: "Link ảnh xe", hint: "URL hình ảnh", placeholder: "https://..." },
+  { name: "location", label: "Khu vực nhận xe", required: true, placeholder: "VD: Hà Nội" },
+  { name: "image", label: "Link ảnh xe", hint: "URL hình ảnh trực tuyến (Unsplash...)", placeholder: "https://..." },
   { name: "description", label: "Mô tả xe", type: "textarea", placeholder: "Tình trạng xe, tiện ích đi kèm..." },
 ];
 
 const EMPTY = {
   name: "", brand: "", type: "", seats: 5, transmission: "", fuel: "",
-  pricePerDay: "", location: "", image: "", description: "",
+  pricePerHour: "", pricePerDay: "", location: "", image: "", description: "",
 };
 
 export default function PostCar() {

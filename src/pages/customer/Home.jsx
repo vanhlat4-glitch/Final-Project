@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/common/DashboardLayout";
 import Loading from "../../components/common/Loading";
@@ -10,18 +11,70 @@ export default function Home() {
   const { user } = useAuth();
   const { items: vehicles, loading } = useApi(RESOURCES.VEHICLES);
   const { items: promotions } = useApi(RESOURCES.PROMOTIONS);
+  const [selectedBrand, setSelectedBrand] = useState("all");
 
-  const featured = vehicles.filter((v) => v.status === "approved").sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3);
+  const approved = useMemo(
+    () => vehicles.filter((v) => v.status === "approved"),
+    [vehicles]
+  );
+
+  const brands = useMemo(
+    () => ["all", ...new Set(approved.map((v) => v.brand).filter(Boolean))],
+    [approved]
+  );
+
+  const filteredVehicles = useMemo(() => {
+    let list = approved;
+    if (selectedBrand !== "all") {
+      list = list.filter((v) => v.brand === selectedBrand);
+    }
+    return list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  }, [approved, selectedBrand]);
 
   return (
-    <DashboardLayout title={`Chào ${user.name.split(" ").slice(-1)[0]} 👋`} subtitle="Bạn muốn thuê xe nào hôm nay?">
-      <div className="card mb-16" style={{ background: "var(--ink)", color: "#fff", border: "none" }}>
-        <div className="flex-between" style={{ flexWrap: "wrap", gap: 16 }}>
+    <DashboardLayout
+      title={`Chào ${user?.name?.split(" ").slice(-1)[0] || "bạn"} 👋`}
+      subtitle="Bạn muốn thuê xe nào hôm nay?"
+    >
+      <div
+        className="card mb-16"
+        style={{
+          background: "linear-gradient(135deg, #14171c 0%, #212631 100%)",
+          color: "#fff",
+          border: "none",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            right: "-20px",
+            bottom: "-30px",
+            opacity: 0.08,
+            fontSize: "130px",
+            fontWeight: 900,
+            fontFamily: "var(--font-display)",
+            pointerEvents: "none",
+          }}
+        >
+          MORENT
+        </div>
+        <div className="flex-between" style={{ flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
           <div>
-            <h2 style={{ fontSize: 20, marginBottom: 6 }}>Tìm xe phù hợp cho chuyến đi tiếp theo</h2>
-            <p style={{ color: "var(--muted-2)", fontSize: 13.5 }}>Hàng trăm xe đã kiểm duyệt, đặt xe chỉ trong vài phút.</p>
+            <div style={{ display: "inline-block", background: "var(--signal)", color: "var(--ink)", fontWeight: 700, fontSize: 11, padding: "2px 8px", borderRadius: 4, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Đa dạng chủng loại
+            </div>
+            <h2 style={{ fontSize: 22, marginBottom: 6, fontWeight: 700 }}>
+              Tìm xe phù hợp cho chuyến đi tiếp theo
+            </h2>
+            <p style={{ color: "var(--muted-2)", fontSize: 13.5 }}>
+              Hơn 20+ dòng xe Sedan, SUV, Xe điện, Xe sang đã kiểm duyệt sẵn sàng giao nhận tận nơi.
+            </p>
           </div>
-          <Link to="/customer/search" className="btn btn-signal">Tìm xe ngay</Link>
+          <Link to="/customer/search" className="btn btn-signal" style={{ padding: "12px 24px", fontSize: 14 }}>
+            Khám phá tất cả xe →
+          </Link>
         </div>
       </div>
 
@@ -29,12 +82,22 @@ export default function Home() {
         <div className="card mb-16">
           <div className="flex-between mb-8">
             <strong style={{ fontSize: 14 }}>Ưu đãi đang chạy</strong>
-            <Link to="/customer/promotions" className="link text-sm">Xem tất cả</Link>
+            <Link to="/customer/promotions" className="link text-sm">
+              Xem tất cả
+            </Link>
           </div>
           <div className="plate-strip">
-            {promotions.slice(0, 4).map((p) => (
-              <span key={p.id} className="plate" style={{ color: "var(--ink)", background: "#fff4e0", borderColor: "var(--line)" }}>
-                {p.code} · -{p.discountPercent}%
+            {promotions.map((p) => (
+              <span
+                key={p.id || p._id}
+                className="plate"
+                style={{
+                  color: "var(--ink)",
+                  background: "#fff4e0",
+                  borderColor: "var(--line)",
+                }}
+              >
+                🏷️ {p.code} · Giảm {p.discountPercent}% ({p.description})
               </span>
             ))}
           </div>
@@ -43,28 +106,114 @@ export default function Home() {
 
       <div className="section-head">
         <div>
-          <h2>Xe nổi bật</h2>
-          <p>Được đánh giá cao nhất trên Morent</p>
+          <h2>Danh sách xe nổi bật</h2>
+          <p>Thuê theo giờ hoặc theo ngày linh hoạt · Đầy đủ bảo hiểm & kiểm định</p>
         </div>
-        <Link to="/customer/search" className="link text-sm">Xem toàn bộ danh sách</Link>
+        <Link to="/customer/search" className="link text-sm">
+          Xem toàn bộ ({approved.length} xe)
+        </Link>
+      </div>
+
+      {/* Brand Filter Tabs */}
+      <div className="brand-strip mb-16" style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+        {brands.map((b) => (
+          <button
+            key={b}
+            onClick={() => setSelectedBrand(b)}
+            className={`btn btn-sm ${selectedBrand === b ? "btn-signal" : "btn-outline"}`}
+            style={{ borderRadius: 20, whiteSpace: "nowrap" }}
+          >
+            {b === "all" ? "🔥 Tất cả hãng" : b}
+          </button>
+        ))}
       </div>
 
       {loading ? (
         <Loading />
       ) : (
         <div className="grid grid-3">
-          {featured.map((v) => (
-            <Link to={`/customer/vehicles/${v.id}`} key={v.id} className="vehicle-card">
-              <img className="vehicle-card__img" src={v.image} alt={v.name} />
+          {filteredVehicles.slice(0, 9).map((v) => (
+            <Link
+              to={`/customer/vehicles/${v.id || v._id}`}
+              key={v.id || v._id}
+              className="vehicle-card"
+            >
+              <div style={{ position: "relative" }}>
+                <img
+                  className="vehicle-card__img"
+                  src={v.image}
+                  alt={v.name}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.target.src = "https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=800&q=80";
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    background: "rgba(20, 23, 28, 0.8)",
+                    color: "#fff",
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                  }}
+                >
+                  📍 {v.location}
+                </span>
+                {v.fuel === "Điện" && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      left: 10,
+                      background: "#059669",
+                      color: "#fff",
+                      padding: "3px 8px",
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontWeight: 700,
+                    }}
+                  >
+                    ⚡ XE ĐIỆN
+                  </span>
+                )}
+              </div>
+
               <div className="vehicle-card__body">
-                <div className="vehicle-card__title">{v.name}</div>
-                <div className="vehicle-card__meta">
-                  <span>{v.type}</span>
-                  <span>{v.location}</span>
-                </div>
-                <div className="vehicle-card__foot">
-                  <div className="price">{formatVND(v.pricePerDay)}<small> /ngày</small></div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--signal-dark)", textTransform: "uppercase" }}>
+                    {v.brand}
+                  </span>
                   {v.rating > 0 && <span className="stars text-sm">★ {v.rating}</span>}
+                </div>
+
+                <div className="vehicle-card__title">{v.name}</div>
+
+                <div className="vehicle-card__meta">
+                  <span>🚗 {v.type}</span>
+                  <span>💺 {v.seats} chỗ</span>
+                  <span>⚙️ {v.transmission}</span>
+                  <span>⛽ {v.fuel}</span>
+                </div>
+
+                <div className="vehicle-card__foot" style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11.5, color: "var(--muted)", marginBottom: 2 }}>Giá thuê linh hoạt:</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                      <span className="price" style={{ color: "var(--signal-dark)" }}>
+                        {formatVND(v.pricePerHour || Math.round((v.pricePerDay || 700000) / 9))}
+                        <small style={{ color: "var(--ink)", fontWeight: 600 }}>/h</small>
+                      </span>
+                      <span style={{ color: "var(--line)" }}>·</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)" }}>
+                        {formatVND(v.pricePerDay)}<small>/ngày</small>
+                      </span>
+                    </div>
+                  </div>
+                  <span className="btn btn-outline btn-sm" style={{ pointerEvents: "none" }}>Chi tiết →</span>
                 </div>
               </div>
             </Link>

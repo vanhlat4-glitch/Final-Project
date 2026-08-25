@@ -167,21 +167,43 @@ const remoteAdapter = {
   async list(resource) {
     await ensureResource(resource);
     const { data } = await client.get(buildUrl(resource));
-    // Server có thể trả mảng trực tiếp, hoặc { data: [...] } hoặc { data: { data: [...] } }
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data?.data?.data)) return data.data.data;
-    if (Array.isArray(data?.items)) return data.items;
-    return [];
+    let raw = [];
+    if (Array.isArray(data)) raw = data;
+    else if (Array.isArray(data?.data)) raw = data.data;
+    else if (Array.isArray(data?.data?.data)) raw = data.data.data;
+    else if (Array.isArray(data?.items)) raw = data.items;
+
+    let items = raw.map((i) => ({ ...i, id: i._id || i.id, _id: i._id || i.id }));
+
+    // Nếu remote rỗng mà ta có SEED data, tự động đẩy seed lên remote
+    if (items.length === 0 && SEED[resource] && SEED[resource].length > 0) {
+      console.log(`[API] Đang tự động nạp ${SEED[resource].length} mục mẫu cho ${resource}...`);
+      try {
+        const seededList = [];
+        for (const seedItem of SEED[resource]) {
+          const { data: created } = await client.post(buildUrl(resource), seedItem);
+          const itemData = created?.data || created || seedItem;
+          seededList.push({ ...itemData, id: itemData._id || itemData.id || seedItem.id });
+        }
+        items = seededList;
+      } catch (seedErr) {
+        console.warn(`[API] Tự động nạp mẫu cho ${resource} gặp lỗi:`, seedErr.message);
+        items = (SEED[resource] || []).map((i) => ({ ...i, id: i._id || i.id }));
+      }
+    }
+
+    return items;
   },
   async create(resource, payload) {
     await ensureResource(resource);
     const { data } = await client.post(buildUrl(resource), payload);
-    return data?.data || data;
+    const item = data?.data || data;
+    return { ...item, id: item._id || item.id };
   },
   async update(resource, id, payload) {
     const { data } = await client.put(buildUrl(resource, id), payload);
-    return data?.data || data;
+    const item = data?.data || data;
+    return { ...item, id: item._id || item.id };
   },
   async remove(resource, id) {
     await client.delete(buildUrl(resource, id));
@@ -194,7 +216,9 @@ async function withFallback(resource, action, args) {
     const result = await remoteAdapter[action](resource, ...args);
     connectionState.mode = "live";
     // đồng bộ cache local để các phần khác (nếu offline) vẫn nhất quán
-    if (action === "list") writeLocal(resource, result);
+    if (action === "list" && Array.isArray(result) && result.length > 0) {
+      writeLocal(resource, result);
+    }
     return result;
   } catch (err) {
     console.warn(`[API] ${action} ${resource} thất bại, chuyển sang offline:`, err.message);

@@ -19,7 +19,7 @@ export default function Payment() {
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState(null);
 
-  const vehicle = state ? vehicles.find((v) => String(v.id) === String(state.vehicleId)) : null;
+  const vehicle = state ? vehicles.find((v) => String(v.id || v._id) === String(state.vehicleId)) : null;
 
   if (!state || !vehicle) {
     return (
@@ -37,17 +37,20 @@ export default function Payment() {
     setSubmitting(true);
     try {
       const order = await create({
-        customerId: user.id,
-        vehicleId: vehicle.id,
+        customerId: user.id || user._id,
+        vehicleId: vehicle.id || vehicle._id,
         startDate: state.startDate,
         endDate: state.endDate,
+        rentalType: state.rentalType || "day",
+        rentHours: state.rentHours || null,
+        rentHourStart: state.rentHourStart || null,
         totalPrice: state.total,
         status: "pending",
         paymentStatus: method === "cash" ? "unpaid" : "paid",
         paymentMethod: method,
         promoCode: state.promoCode,
       });
-      setOrderId(order.id);
+      setOrderId(order.id || order._id);
     } finally {
       setSubmitting(false);
     }
@@ -97,8 +100,14 @@ export default function Payment() {
 
         <div className="card">
           <h3 style={{ fontSize: 16, marginBottom: 14 }}>Tóm tắt đơn thuê</h3>
-          <div className="text-sm mb-8"><strong>{vehicle.name}</strong></div>
-          <div className="text-sm text-muted mb-16">{formatDate(state.startDate)} → {formatDate(state.endDate)} ({state.days} ngày)</div>
+          <div className="text-sm mb-8"><strong>{vehicle.name}</strong> ({vehicle.brand} - {vehicle.location})</div>
+          <div className="text-sm text-muted mb-16">
+            {state.rentalType === "hour" ? (
+              <span>⏱️ Thuê theo giờ: Ngày <strong>{formatDate(state.startDate)}</strong> lúc <strong>{state.rentHourStart}</strong> ({state.rentHours} giờ)</span>
+            ) : (
+              <span>📅 Thuê theo ngày: <strong>{formatDate(state.startDate)}</strong> → <strong>{formatDate(state.endDate)}</strong> ({state.days} ngày)</span>
+            )}
+          </div>
 
           <div className="lane-divider mb-16" style={{ opacity: 0.4 }} />
 

@@ -13,9 +13,10 @@ import { VEHICLE_STATUS_LABEL } from "../../constants/vehicleStatus";
 const EDIT_FIELDS = [
   { name: "name", label: "Tên xe", required: true },
   { row: [
+    { name: "pricePerHour", label: "Giá thuê / giờ (₫)", type: "number", required: true },
     { name: "pricePerDay", label: "Giá thuê / ngày (₫)", type: "number", required: true },
-    { name: "location", label: "Khu vực", required: true },
   ] },
+  { name: "location", label: "Khu vực", required: true },
   { name: "description", label: "Mô tả", type: "textarea" },
 ];
 
@@ -30,7 +31,7 @@ export default function CarList() {
   async function handleSave() {
     setSaving(true);
     try {
-      await update(modal.data.id, modal.data);
+      await update(modal.data.id || modal.data._id, modal.data);
       setModal(null);
     } finally {
       setSaving(false);
@@ -38,7 +39,7 @@ export default function CarList() {
   }
 
   async function handleDelete(row) {
-    if (confirm(`Gỡ tin đăng "${row.name}"?`)) await remove(row.id);
+    if (confirm(`Gỡ tin đăng "${row.name}"?`)) await remove(row.id || row._id);
   }
 
   return (
@@ -52,7 +53,16 @@ export default function CarList() {
           { key: "img", label: "", render: (r) => <img src={r.image} alt="" style={{ width: 56, height: 40, objectFit: "cover", borderRadius: 6 }} /> },
           { key: "name", label: "Tên xe", render: (r) => <strong>{r.name}</strong> },
           { key: "type", label: "Loại" },
-          { key: "pricePerDay", label: "Giá/ngày", render: (r) => <span className="mono">{formatVND(r.pricePerDay)}</span> },
+          {
+            key: "pricing",
+            label: "Giá thuê",
+            render: (r) => (
+              <div>
+                <div className="mono text-sm" style={{ color: "var(--signal-dark)", fontWeight: 600 }}>{formatVND(r.pricePerHour || Math.round(r.pricePerDay / 9))}/h</div>
+                <div className="mono text-sm text-muted">{formatVND(r.pricePerDay)}/ngày</div>
+              </div>
+            ),
+          },
           { key: "status", label: "Trạng thái", render: (r) => <Badge tone={r.status === "approved" ? "success" : r.status === "rejected" ? "danger" : "warning"}>{VEHICLE_STATUS_LABEL[r.status]}</Badge> },
         ]}
         renderActions={(row) => (
