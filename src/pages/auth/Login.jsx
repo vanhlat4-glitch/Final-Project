@@ -2,18 +2,13 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { ROLES } from "../../constants/roles";
+import CarHeadlightsAnimation from "../../components/common/CarHeadlightsAnimation";
 
 const ROLE_TABS = [
   { value: ROLES.CUSTOMER, label: "Khách hàng" },
   { value: ROLES.PROVIDER, label: "Nhà cung cấp" },
   { value: ROLES.ADMIN, label: "Quản trị viên" },
 ];
-
-const DEMO_HINTS = {
-  [ROLES.CUSTOMER]: "customer1@morent.vn / 123456",
-  [ROLES.PROVIDER]: "provider1@morent.vn / 123456",
-  [ROLES.ADMIN]: "admin@morent.vn / admin123",
-};
 
 export default function Login() {
   const [role, setRole] = useState(ROLES.CUSTOMER);
@@ -38,12 +33,16 @@ export default function Login() {
       <div className="auth-visual">
         <div>
           <div className="auth-visual__odometer">MORENT // CAR RENTAL SYSTEM</div>
-          <div className="lane-divider" style={{ margin: "16px 0 28px", maxWidth: 220 }} />
+          <div className="lane-divider" style={{ margin: "16px 0 24px", maxWidth: 220 }} />
           <h1 className="auth-visual__headline">
             Đặt xe nhanh, <br />
             quản lý <span>gọn gàng</span> trên một nền tảng.
           </h1>
         </div>
+
+        {/* Cinematic Animated Car Front with Headlights Ignition */}
+        <CarHeadlightsAnimation />
+
         <div className="plate-strip">
           <span className="plate">01 · TÌM XE</span>
           <span className="plate">02 · ĐẶT XE</span>
@@ -75,7 +74,7 @@ export default function Login() {
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder={DEMO_HINTS[role]}
+                placeholder="name@example.com"
               />
             </div>
             <div className="field">
@@ -93,10 +92,6 @@ export default function Login() {
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </form>
-
-          <p className="text-sm text-muted mt-16" style={{ textAlign: "center" }}>
-            Tài khoản demo: <span className="mono">{DEMO_HINTS[role]}</span>
-          </p>
 
           {role !== ROLES.ADMIN && (
             <div className="auth-foot">

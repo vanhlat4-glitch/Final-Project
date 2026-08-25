@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { ROLES } from "../../constants/roles";
+import CarHeadlightsAnimation from "../../components/common/CarHeadlightsAnimation";
 
 const ROLE_TABS = [
   { value: ROLES.CUSTOMER, label: "Khách hàng" },
@@ -37,12 +38,16 @@ export default function Register() {
       <div className="auth-visual">
         <div>
           <div className="auth-visual__odometer">MORENT // ĐĂNG KÝ TÀI KHOẢN</div>
-          <div className="lane-divider" style={{ margin: "16px 0 28px", maxWidth: 220 }} />
+          <div className="lane-divider" style={{ margin: "16px 0 24px", maxWidth: 220 }} />
           <h1 className="auth-visual__headline">
             Tham gia Morent, <br />
             bắt đầu <span>hành trình</span> của bạn.
           </h1>
         </div>
+
+        {/* Cinematic Animated Car Front with Headlights Ignition */}
+        <CarHeadlightsAnimation />
+
         <div className="plate-strip">
           <span className="plate">MIỄN PHÍ ĐĂNG KÝ</span>
           <span className="plate">HỖ TRỢ 24/7</span>
