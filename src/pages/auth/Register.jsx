@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { ROLES } from "../../constants/roles";
 import CarHeadlightsAnimation from "../../components/common/CarHeadlightsAnimation";
+import RoadLaneDivider from "../../components/common/RoadLaneDivider";
 
 const ROLE_TABS = [
   { value: ROLES.CUSTOMER, label: "Khách hàng" },
@@ -38,7 +39,7 @@ export default function Register() {
       <div className="auth-visual">
         <div>
           <div className="auth-visual__odometer">MORENT // ĐĂNG KÝ TÀI KHOẢN</div>
-          <div className="lane-divider" style={{ margin: "16px 0 24px", maxWidth: 220 }} />
+          <RoadLaneDivider style={{ margin: "14px 0 20px", maxWidth: 260 }} />
           <h1 className="auth-visual__headline">
             Tham gia Morent, <br />
             bắt đầu <span>hành trình</span> của bạn.

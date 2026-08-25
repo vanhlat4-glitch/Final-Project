@@ -3,6 +3,7 @@ import { NAV_BY_ROLE, ROLE_LABEL } from "../../constants/roles";
 import { useAuth } from "../../hooks/useAuth";
 import { connectionState } from "../../services/api";
 import { useEffect, useState } from "react";
+import RoadLaneDivider from "./RoadLaneDivider";
 
 export default function Sidebar() {
   const { role, logout } = useAuth();
@@ -24,7 +25,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <div className="lane-divider" style={{ opacity: 0.35 }} />
+      <RoadLaneDivider style={{ opacity: 0.7 }} />
 
       <nav className="nav">
         {items.map((item) => (
