@@ -5,10 +5,12 @@ import Loading from "../../components/common/Loading";
 import { useApi } from "../../hooks/useApi";
 import { RESOURCES } from "../../services/api";
 import { useAuth } from "../../hooks/useAuth";
+import { useLanguage } from "../../hooks/useLanguage";
 import { formatVND } from "../../utils/formatCurrency";
 
 export default function Home() {
   const { user } = useAuth();
+  const { t, isEn } = useLanguage();
   const { items: vehicles, loading } = useApi(RESOURCES.VEHICLES);
   const { items: promotions } = useApi(RESOURCES.PROMOTIONS);
   const [selectedBrand, setSelectedBrand] = useState("all");
@@ -31,10 +33,12 @@ export default function Home() {
     return list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
   }, [approved, selectedBrand]);
 
+  const userName = user?.name?.split(" ").slice(-1)[0] || (isEn ? "there" : "bạn");
+
   return (
     <DashboardLayout
-      title={`Chào ${user?.name?.split(" ").slice(-1)[0] || "bạn"} 👋`}
-      subtitle="Bạn muốn thuê xe nào hôm nay?"
+      title={`${isEn ? "Hello" : "Chào"} ${userName} 👋`}
+      subtitle={t("ready_to_drive", "Bạn muốn thuê xe nào hôm nay?")}
     >
       <div
         className="card mb-16"
@@ -62,18 +66,18 @@ export default function Home() {
         </div>
         <div className="flex-between" style={{ flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
           <div>
-            <div style={{ display: "inline-block", background: "var(--signal)", color: "var(--ink)", fontWeight: 700, fontSize: 11, padding: "2px 8px", borderRadius: 4, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Đa dạng chủng loại
+            <div style={{ display: "inline-block", background: "var(--signal)", color: "#11141a", fontWeight: 700, fontSize: 11, padding: "2px 8px", borderRadius: 4, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              {t("Đa dạng chủng loại", "Diverse Selection")}
             </div>
-            <h2 style={{ fontSize: 22, marginBottom: 6, fontWeight: 700 }}>
-              Tìm xe phù hợp cho chuyến đi tiếp theo
+            <h2 style={{ fontSize: 22, marginBottom: 6, fontWeight: 700, color: "#fff" }}>
+              {t("Tìm xe phù hợp cho chuyến đi tiếp theo", "Find the perfect car for your next journey")}
             </h2>
-            <p style={{ color: "var(--muted-2)", fontSize: 13.5 }}>
-              Hơn 20+ dòng xe Sedan, SUV, Xe điện, Xe sang đã kiểm duyệt sẵn sàng giao nhận tận nơi.
+            <p style={{ color: "#d1d5db", fontSize: 13.5 }}>
+              {t("Hơn 20+ dòng xe Sedan, SUV, Xe điện, Xe sang đã kiểm duyệt sẵn sàng giao nhận tận nơi.", "20+ verified Sedan, SUV, Electric, and Luxury models ready for delivery.")}
             </p>
           </div>
           <Link to="/customer/search" className="btn btn-signal" style={{ padding: "12px 24px", fontSize: 14 }}>
-            Khám phá tất cả xe →
+            {t("Khám phá tất cả xe →", "Explore all cars →")}
           </Link>
         </div>
       </div>
@@ -81,23 +85,18 @@ export default function Home() {
       {promotions.length > 0 && (
         <div className="card mb-16">
           <div className="flex-between mb-8">
-            <strong style={{ fontSize: 14 }}>Ưu đãi đang chạy</strong>
+            <strong style={{ fontSize: 14 }}>{t("Ưu đãi đang chạy", "Active Promotions")}</strong>
             <Link to="/customer/promotions" className="link text-sm">
-              Xem tất cả
+              {t("Xem tất cả", "View all")}
             </Link>
           </div>
           <div className="plate-strip">
             {promotions.map((p) => (
               <span
                 key={p.id || p._id}
-                className="plate"
-                style={{
-                  color: "var(--ink)",
-                  background: "#fff4e0",
-                  borderColor: "var(--line)",
-                }}
+                className="plate promo-plate"
               >
-                🏷️ {p.code} · Giảm {p.discountPercent}% ({p.description})
+                🏷️ <strong style={{ color: "var(--signal-dark)", marginRight: 2 }}>{p.code}</strong> · {t("Giảm", "Discount")} {p.discountPercent}% ({p.description})
               </span>
             ))}
           </div>
@@ -106,11 +105,11 @@ export default function Home() {
 
       <div className="section-head">
         <div>
-          <h2>Danh sách xe nổi bật</h2>
-          <p>Thuê theo giờ hoặc theo ngày linh hoạt · Đầy đủ bảo hiểm & kiểm định</p>
+          <h2>{t("Danh sách xe nổi bật", "Featured Vehicles")}</h2>
+          <p>{t("Thuê theo giờ hoặc theo ngày linh hoạt · Đầy đủ bảo hiểm & kiểm định", "Flexible hourly or daily rental · Fully insured & verified")}</p>
         </div>
         <Link to="/customer/search" className="link text-sm">
-          Xem toàn bộ ({approved.length} xe)
+          {isEn ? `View all (${approved.length} cars)` : `Xem toàn bộ (${approved.length} xe)`}
         </Link>
       </div>
 
@@ -123,7 +122,7 @@ export default function Home() {
             className={`btn btn-sm ${selectedBrand === b ? "btn-signal" : "btn-outline"}`}
             style={{ borderRadius: 20, whiteSpace: "nowrap" }}
           >
-            {b === "all" ? "🔥 Tất cả hãng" : b}
+            {b === "all" ? (isEn ? "🔥 All Brands" : "🔥 Tất cả hãng") : b}
           </button>
         ))}
       </div>
@@ -163,7 +162,7 @@ export default function Home() {
                 >
                   📍 {v.location}
                 </span>
-                {v.fuel === "Điện" && (
+                {(v.fuel === "Điện" || v.fuel === "Electric") && (
                   <span
                     style={{
                       position: "absolute",
@@ -177,7 +176,7 @@ export default function Home() {
                       fontWeight: 700,
                     }}
                   >
-                    ⚡ XE ĐIỆN
+                    ⚡ {isEn ? "ELECTRIC CAR" : "XE ĐIỆN"}
                   </span>
                 )}
               </div>
@@ -193,15 +192,17 @@ export default function Home() {
                 <div className="vehicle-card__title">{v.name}</div>
 
                 <div className="vehicle-card__meta">
-                  <span>🚗 {v.type}</span>
-                  <span>💺 {v.seats} chỗ</span>
-                  <span>⚙️ {v.transmission}</span>
-                  <span>⛽ {v.fuel}</span>
+                  <span>🚗 {t(v.type)}</span>
+                  <span>💺 {v.seats} {isEn ? "seats" : "chỗ"}</span>
+                  <span>⚙️ {t(v.transmission)}</span>
+                  <span>⛽ {t(v.fuel)}</span>
                 </div>
 
                 <div className="vehicle-card__foot" style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
                   <div>
-                    <div style={{ fontSize: 11.5, color: "var(--muted)", marginBottom: 2 }}>Giá thuê linh hoạt:</div>
+                    <div style={{ fontSize: 11.5, color: "var(--muted)", marginBottom: 2 }}>
+                      {t("Giá thuê:", "Rental Price:")}
+                    </div>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                       <span className="price" style={{ color: "var(--signal-dark)" }}>
                         {formatVND(v.pricePerHour || Math.round((v.pricePerDay || 700000) / 9))}
@@ -209,11 +210,13 @@ export default function Home() {
                       </span>
                       <span style={{ color: "var(--line)" }}>·</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)" }}>
-                        {formatVND(v.pricePerDay)}<small>/ngày</small>
+                        {formatVND(v.pricePerDay)}<small>/{isEn ? "day" : "ngày"}</small>
                       </span>
                     </div>
                   </div>
-                  <span className="btn btn-outline btn-sm" style={{ pointerEvents: "none" }}>Chi tiết →</span>
+                  <span className="btn btn-outline btn-sm" style={{ pointerEvents: "none" }}>
+                    {t("Xem chi tiết", "Details")} →
+                  </span>
                 </div>
               </div>
             </Link>

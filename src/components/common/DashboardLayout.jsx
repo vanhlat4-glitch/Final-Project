@@ -1,13 +1,14 @@
-import Sidebar from "./Sidebar";
+import Taskbar from "./Taskbar";
 import Header from "./Header";
 
 export default function DashboardLayout({ title, subtitle, children }) {
   return (
     <div className="app-shell">
-      <Sidebar />
+      {/* Top Animated Taskbar Dock */}
+      <Taskbar />
       <div className="main">
         <Header title={title} subtitle={subtitle} />
-        <div className="content">{children}</div>
+        <main className="content">{children}</main>
       </div>
     </div>
   );

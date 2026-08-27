@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import { useAuth } from "./hooks/useAuth";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import { ROLES } from "./constants/roles";
@@ -59,58 +61,62 @@ function Guard({ role, children }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<RootRedirect />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-          {/* Admin */}
-          <Route path="/admin" element={<Guard role={ROLES.ADMIN}><AdminDashboard /></Guard>} />
-          <Route path="/admin/providers" element={<Guard role={ROLES.ADMIN}><ProviderManagement /></Guard>} />
-          <Route path="/admin/customers" element={<Guard role={ROLES.ADMIN}><CustomerManagement /></Guard>} />
-          <Route path="/admin/vehicles" element={<Guard role={ROLES.ADMIN}><VehicleManagement /></Guard>} />
-          <Route path="/admin/vehicles/approval" element={<Guard role={ROLES.ADMIN}><VehicleApproval /></Guard>} />
-          <Route path="/admin/orders" element={<Guard role={ROLES.ADMIN}><OrderManagement /></Guard>} />
-          <Route path="/admin/payments" element={<Guard role={ROLES.ADMIN}><PaymentManagement /></Guard>} />
-          <Route path="/admin/promotions" element={<Guard role={ROLES.ADMIN}><AdminPromotionManagement /></Guard>} />
-          <Route path="/admin/reviews" element={<Guard role={ROLES.ADMIN}><ReviewManagement /></Guard>} />
-          <Route path="/admin/notifications" element={<Guard role={ROLES.ADMIN}><NotificationManagement /></Guard>} />
-          <Route path="/admin/support" element={<Guard role={ROLES.ADMIN}><SupportManagement /></Guard>} />
-          <Route path="/admin/finance" element={<Guard role={ROLES.ADMIN}><FinancialManagement /></Guard>} />
-          <Route path="/admin/reports" element={<Guard role={ROLES.ADMIN}><Report /></Guard>} />
-          <Route path="/admin/access-control" element={<Guard role={ROLES.ADMIN}><AccessControl /></Guard>} />
+              {/* Admin */}
+              <Route path="/admin" element={<Guard role={ROLES.ADMIN}><AdminDashboard /></Guard>} />
+              <Route path="/admin/providers" element={<Guard role={ROLES.ADMIN}><ProviderManagement /></Guard>} />
+              <Route path="/admin/customers" element={<Guard role={ROLES.ADMIN}><CustomerManagement /></Guard>} />
+              <Route path="/admin/vehicles" element={<Guard role={ROLES.ADMIN}><VehicleManagement /></Guard>} />
+              <Route path="/admin/vehicles/approval" element={<Guard role={ROLES.ADMIN}><VehicleApproval /></Guard>} />
+              <Route path="/admin/orders" element={<Guard role={ROLES.ADMIN}><OrderManagement /></Guard>} />
+              <Route path="/admin/payments" element={<Guard role={ROLES.ADMIN}><PaymentManagement /></Guard>} />
+              <Route path="/admin/promotions" element={<Guard role={ROLES.ADMIN}><AdminPromotionManagement /></Guard>} />
+              <Route path="/admin/reviews" element={<Guard role={ROLES.ADMIN}><ReviewManagement /></Guard>} />
+              <Route path="/admin/notifications" element={<Guard role={ROLES.ADMIN}><NotificationManagement /></Guard>} />
+              <Route path="/admin/support" element={<Guard role={ROLES.ADMIN}><SupportManagement /></Guard>} />
+              <Route path="/admin/finance" element={<Guard role={ROLES.ADMIN}><FinancialManagement /></Guard>} />
+              <Route path="/admin/reports" element={<Guard role={ROLES.ADMIN}><Report /></Guard>} />
+              <Route path="/admin/access-control" element={<Guard role={ROLES.ADMIN}><AccessControl /></Guard>} />
 
-          {/* Provider */}
-          <Route path="/provider" element={<Guard role={ROLES.PROVIDER}><ProviderDashboard /></Guard>} />
-          <Route path="/provider/post-car" element={<Guard role={ROLES.PROVIDER}><PostCar /></Guard>} />
-          <Route path="/provider/cars" element={<Guard role={ROLES.PROVIDER}><CarList /></Guard>} />
-          <Route path="/provider/orders" element={<Guard role={ROLES.PROVIDER}><ProviderOrders /></Guard>} />
-          <Route path="/provider/payments" element={<Guard role={ROLES.PROVIDER}><ProviderPayments /></Guard>} />
-          <Route path="/provider/promotions" element={<Guard role={ROLES.PROVIDER}><ProviderPromotions /></Guard>} />
-          <Route path="/provider/reviews" element={<Guard role={ROLES.PROVIDER}><ProviderReviews /></Guard>} />
-          <Route path="/provider/support" element={<Guard role={ROLES.PROVIDER}><ProviderSupport /></Guard>} />
-          <Route path="/provider/reports" element={<Guard role={ROLES.PROVIDER}><ProviderReport /></Guard>} />
-          <Route path="/provider/finance" element={<Guard role={ROLES.PROVIDER}><ProviderFinance /></Guard>} />
+              {/* Provider */}
+              <Route path="/provider" element={<Guard role={ROLES.PROVIDER}><ProviderDashboard /></Guard>} />
+              <Route path="/provider/post-car" element={<Guard role={ROLES.PROVIDER}><PostCar /></Guard>} />
+              <Route path="/provider/cars" element={<Guard role={ROLES.PROVIDER}><CarList /></Guard>} />
+              <Route path="/provider/orders" element={<Guard role={ROLES.PROVIDER}><ProviderOrders /></Guard>} />
+              <Route path="/provider/payments" element={<Guard role={ROLES.PROVIDER}><ProviderPayments /></Guard>} />
+              <Route path="/provider/promotions" element={<Guard role={ROLES.PROVIDER}><ProviderPromotions /></Guard>} />
+              <Route path="/provider/reviews" element={<Guard role={ROLES.PROVIDER}><ProviderReviews /></Guard>} />
+              <Route path="/provider/support" element={<Guard role={ROLES.PROVIDER}><ProviderSupport /></Guard>} />
+              <Route path="/provider/reports" element={<Guard role={ROLES.PROVIDER}><ProviderReport /></Guard>} />
+              <Route path="/provider/finance" element={<Guard role={ROLES.PROVIDER}><ProviderFinance /></Guard>} />
 
-          {/* Customer */}
-          <Route path="/customer" element={<Guard role={ROLES.CUSTOMER}><Home /></Guard>} />
-          <Route path="/customer/search" element={<Guard role={ROLES.CUSTOMER}><SearchVehicle /></Guard>} />
-          <Route path="/customer/vehicles/:id" element={<Guard role={ROLES.CUSTOMER}><VehicleDetail /></Guard>} />
-          <Route path="/customer/booking/:id" element={<Guard role={ROLES.CUSTOMER}><Booking /></Guard>} />
-          <Route path="/customer/payment" element={<Guard role={ROLES.CUSTOMER}><Payment /></Guard>} />
-          <Route path="/customer/orders" element={<Guard role={ROLES.CUSTOMER}><OrderHistory /></Guard>} />
-          <Route path="/customer/orders/:id" element={<Guard role={ROLES.CUSTOMER}><OrderDetail /></Guard>} />
-          <Route path="/customer/tracking/:id" element={<Guard role={ROLES.CUSTOMER}><VehicleTracking /></Guard>} />
-          <Route path="/customer/reviews" element={<Guard role={ROLES.CUSTOMER}><Review /></Guard>} />
-          <Route path="/customer/promotions" element={<Guard role={ROLES.CUSTOMER}><CustomerPromotions /></Guard>} />
-          <Route path="/customer/support" element={<Guard role={ROLES.CUSTOMER}><CustomerSupport /></Guard>} />
-          <Route path="/customer/profile" element={<Guard role={ROLES.CUSTOMER}><Profile /></Guard>} />
+              {/* Customer */}
+              <Route path="/customer" element={<Guard role={ROLES.CUSTOMER}><Home /></Guard>} />
+              <Route path="/customer/search" element={<Guard role={ROLES.CUSTOMER}><SearchVehicle /></Guard>} />
+              <Route path="/customer/vehicles/:id" element={<Guard role={ROLES.CUSTOMER}><VehicleDetail /></Guard>} />
+              <Route path="/customer/booking/:id" element={<Guard role={ROLES.CUSTOMER}><Booking /></Guard>} />
+              <Route path="/customer/payment" element={<Guard role={ROLES.CUSTOMER}><Payment /></Guard>} />
+              <Route path="/customer/orders" element={<Guard role={ROLES.CUSTOMER}><OrderHistory /></Guard>} />
+              <Route path="/customer/orders/:id" element={<Guard role={ROLES.CUSTOMER}><OrderDetail /></Guard>} />
+              <Route path="/customer/tracking/:id" element={<Guard role={ROLES.CUSTOMER}><VehicleTracking /></Guard>} />
+              <Route path="/customer/reviews" element={<Guard role={ROLES.CUSTOMER}><Review /></Guard>} />
+              <Route path="/customer/promotions" element={<Guard role={ROLES.CUSTOMER}><CustomerPromotions /></Guard>} />
+              <Route path="/customer/support" element={<Guard role={ROLES.CUSTOMER}><CustomerSupport /></Guard>} />
+              <Route path="/customer/profile" element={<Guard role={ROLES.CUSTOMER}><Profile /></Guard>} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

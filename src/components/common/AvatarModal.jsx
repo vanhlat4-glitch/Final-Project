@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useApi } from "../../hooks/useApi";
+import { useLanguage } from "../../hooks/useLanguage";
 import { RESOURCES } from "../../services/api";
 import { initials } from "../../utils/formatDate";
 
@@ -17,6 +18,7 @@ const AVATAR_PRESETS = [
 
 export default function AvatarModal({ open, onClose }) {
   const { user, role, updateProfile } = useAuth();
+  const { t, isEn } = useLanguage();
   const { update } = useApi(
     role === "provider"
       ? RESOURCES.PROVIDERS
@@ -33,18 +35,17 @@ export default function AvatarModal({ open, onClose }) {
 
   if (!open) return null;
 
-  // Handle local file selection -> convert to Base64 data URL
   function handleFileChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chọn một tệp hình ảnh hợp lệ (PNG, JPG, JPEG, WEBP)");
+      alert(isEn ? "Please select a valid image file (PNG, JPG, JPEG, WEBP)" : "Vui lòng chọn một tệp hình ảnh hợp lệ (PNG, JPG, JPEG, WEBP)");
       return;
     }
 
     if (file.size > 3 * 1024 * 1024) {
-      alert("Kích thước ảnh tối đa là 3MB");
+      alert(isEn ? "Maximum image size is 3MB" : "Kích thước ảnh tối đa là 3MB");
       return;
     }
 
@@ -63,7 +64,7 @@ export default function AvatarModal({ open, onClose }) {
         try {
           await update(user.id || user._id, { avatar: avatarValue });
         } catch (err) {
-          console.warn("[Avatar] Lưu API server cảnh báo:", err.message);
+          console.warn("[Avatar] Save warning:", err.message);
         }
       }
       updateProfile({ avatar: avatarValue });
@@ -87,7 +88,9 @@ export default function AvatarModal({ open, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
         <div className="modal__head">
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Đổi ảnh đại diện</h3>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
+            {t("Đổi ảnh đại diện", "Change Avatar")}
+          </h3>
           <button className="icon-btn" onClick={onClose}>✕</button>
         </div>
 
@@ -98,33 +101,32 @@ export default function AvatarModal({ open, onClose }) {
               {currentPreview ? (
                 <img
                   src={currentPreview}
-                  alt="Avatar preview"
+                  alt={user?.name || "Avatar"}
                   style={{
-                    width: 72,
-                    height: 72,
+                    width: 68,
+                    height: 68,
                     borderRadius: "50%",
                     objectFit: "cover",
                     border: "3px solid var(--signal)",
-                    boxShadow: "0 4px 12px rgba(20, 23, 28, 0.15)",
+                    boxShadow: "0 4px 14px var(--signal-glow)",
                   }}
                   onError={(e) => {
-                    e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=240&auto=format&fit=crop&q=80";
+                    e.target.style.display = "none";
+                    if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
                   }}
                 />
-              ) : (
-                <div
-                  className="avatar"
-                  style={{
-                    width: 72,
-                    height: 72,
-                    fontSize: 26,
-                    border: "3px solid var(--line)",
-                    boxShadow: "0 4px 12px rgba(20, 23, 28, 0.1)",
-                  }}
-                >
-                  {initials(user?.name || "?")}
-                </div>
-              )}
+              ) : null}
+              <div
+                className="avatar"
+                style={{
+                  width: 68,
+                  height: 68,
+                  fontSize: 24,
+                  display: currentPreview ? "none" : "flex",
+                }}
+              >
+                {initials(user?.name || "?")}
+              </div>
             </div>
 
             <div>
@@ -145,7 +147,7 @@ export default function AvatarModal({ open, onClose }) {
                     marginTop: 6,
                   }}
                 >
-                  ✕ Gỡ ảnh (dùng chữ cái đầu)
+                  ✕ {isEn ? "Remove photo (use initials)" : "Gỡ ảnh (dùng chữ cái đầu)"}
                 </button>
               )}
             </div>
@@ -158,21 +160,21 @@ export default function AvatarModal({ open, onClose }) {
               className={tab === "presets" ? "active" : ""}
               onClick={() => setTab("presets")}
             >
-              ✨ Ảnh mẫu có sẵn
+              ✨ {isEn ? "Presets" : "Ảnh mẫu"}
             </button>
             <button
               type="button"
               className={tab === "upload" ? "active" : ""}
               onClick={() => setTab("upload")}
             >
-              📁 Tải ảnh từ máy
+              📁 {isEn ? "Upload" : "Tải ảnh từ máy"}
             </button>
             <button
               type="button"
               className={tab === "url" ? "active" : ""}
               onClick={() => setTab("url")}
             >
-              🔗 Nhập link URL
+              🔗 {isEn ? "Image URL" : "Nhập link URL"}
             </button>
           </div>
 
@@ -180,7 +182,7 @@ export default function AvatarModal({ open, onClose }) {
           {tab === "presets" && (
             <div>
               <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 10 }}>
-                Chọn một ảnh đại diện phong cách yêu thích:
+                {isEn ? "Choose your favorite avatar style:" : "Chọn một ảnh đại diện phong cách yêu thích:"}
               </div>
               <div
                 style={{
@@ -202,7 +204,7 @@ export default function AvatarModal({ open, onClose }) {
                           ? "2.5px solid var(--signal)"
                           : "1.5px solid var(--line)",
                       padding: 2,
-                      background: "#fff",
+                      background: "var(--paper-2)",
                       transition: "transform 0.15s ease, border-color 0.15s ease",
                       boxShadow: selectedAvatar === preset.url ? "0 0 0 2px rgba(255,176,32,0.3)" : "none",
                     }}
@@ -235,7 +237,7 @@ export default function AvatarModal({ open, onClose }) {
                   borderRadius: "var(--radius)",
                   padding: "24px 16px",
                   cursor: "pointer",
-                  background: "var(--paper)",
+                  background: "var(--paper-3)",
                   transition: "all 0.2s ease",
                 }}
                 onDragOver={(e) => e.preventDefault()}
@@ -250,10 +252,10 @@ export default function AvatarModal({ open, onClose }) {
               >
                 <div style={{ fontSize: 32, marginBottom: 8 }}>📸</div>
                 <strong style={{ display: "block", fontSize: 14, marginBottom: 4 }}>
-                  Nhấp để chọn ảnh từ máy tính
+                  {t("Nhấp để chọn ảnh từ máy tính", "Click to select image from your device")}
                 </strong>
                 <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                  Hỗ trợ kéo thả file PNG, JPG, WEBP (tối đa 3MB)
+                  {t("Hỗ trợ kéo thả file PNG, JPG, WEBP (tối đa 3MB)", "Supports drag & drop PNG, JPG, WEBP (max 3MB)")}
                 </span>
               </div>
             </div>
@@ -263,14 +265,16 @@ export default function AvatarModal({ open, onClose }) {
           {tab === "url" && (
             <div>
               <div className="field">
-                <label>Đường dẫn hình ảnh (URL)</label>
+                <label>{t("Đường dẫn hình ảnh (URL)", "Image Web URL")}</label>
                 <input
                   className="input"
                   placeholder="https://example.com/avatar.jpg"
                   value={customUrl}
                   onChange={(e) => setCustomUrl(e.target.value)}
                 />
-                <span className="hint">Dán link ảnh đại diện từ mạng (Facebook, Google, Unsplash...)</span>
+                <span className="hint">
+                  {t("Dán link ảnh đại diện từ mạng (Facebook, Google, Unsplash...)", "Paste public image URL (Facebook, Google, Unsplash...)")}
+                </span>
               </div>
             </div>
           )}
@@ -278,10 +282,10 @@ export default function AvatarModal({ open, onClose }) {
 
         <div className="modal__foot">
           <button className="btn btn-outline" onClick={onClose} disabled={saving}>
-            Hủy
+            {t("Hủy", "Cancel")}
           </button>
           <button className="btn btn-signal" onClick={handleSave} disabled={saving}>
-            {saving ? "Đang lưu..." : "Lưu ảnh đại diện"}
+            {saving ? (isEn ? "Saving..." : "Đang lưu...") : t("Lưu ảnh đại diện", "Save Avatar")}
           </button>
         </div>
       </div>

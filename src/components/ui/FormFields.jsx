@@ -1,3 +1,5 @@
+import { useLanguage } from "../../hooks/useLanguage";
+
 // field: { name, label, type: text|number|textarea|select|date, options, required, hint, colSpan }
 export default function FormFields({ fields, values, onChange }) {
   function set(name, value) {
@@ -23,30 +25,33 @@ export default function FormFields({ fields, values, onChange }) {
 }
 
 function Field({ field, value, onSet }) {
+  const { t } = useLanguage();
+  const labelText = t(field.label);
+
   const common = {
     id: field.name,
     className: "input",
     value: value ?? "",
     required: field.required,
-    placeholder: field.placeholder,
+    placeholder: field.placeholder ? t(field.placeholder) : undefined,
     onChange: (e) => onSet(field.name, field.type === "number" ? e.target.valueAsNumber || e.target.value : e.target.value),
   };
 
   return (
     <div className="field">
       <label htmlFor={field.name}>
-        {field.label} {field.hint && <span className="hint">— {field.hint}</span>}
+        {labelText} {field.hint && <span className="hint">— {t(field.hint)}</span>}
       </label>
       {field.type === "textarea" ? (
         <textarea {...common} rows={3} />
       ) : field.type === "select" ? (
         <select {...common}>
           <option value="" disabled>
-            Chọn {field.label.toLowerCase()}
+            {t("Chọn", "Select")} {labelText.toLowerCase()}
           </option>
           {field.options.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(o.label)}
             </option>
           ))}
         </select>

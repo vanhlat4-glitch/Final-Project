@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "../../components/common/DashboardLayout";
 import Loading from "../../components/common/Loading";
 import { useApi } from "../../hooks/useApi";
+import { useLanguage } from "../../hooks/useLanguage";
 import { RESOURCES } from "../../services/api";
 import { formatVND } from "../../utils/formatCurrency";
 import { daysBetween } from "../../utils/formatDate";
@@ -10,6 +11,7 @@ import { daysBetween } from "../../utils/formatDate";
 export default function Booking() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t, isEn } = useLanguage();
   const { items: vehicles, loading } = useApi(RESOURCES.VEHICLES);
   const { items: promotions } = useApi(RESOURCES.PROMOTIONS);
 
@@ -42,7 +44,7 @@ export default function Booking() {
     e.preventDefault();
     setError("");
     if (rentalType === "day" && new Date(endDate) < new Date(startDate)) {
-      setError("Ngày trả xe phải sau hoặc bằng ngày nhận xe");
+      setError(isEn ? "Return date must be equal or after pickup date" : "Ngày trả xe phải sau hoặc bằng ngày nhận xe");
       return;
     }
     navigate("/customer/payment", {
@@ -64,7 +66,7 @@ export default function Booking() {
 
   if (loading) {
     return (
-      <DashboardLayout title="Đặt xe">
+      <DashboardLayout title={t("Đặt xe", "Book Vehicle")}>
         <Loading />
       </DashboardLayout>
     );
@@ -72,19 +74,21 @@ export default function Booking() {
 
   if (!vehicle) {
     return (
-      <DashboardLayout title="Không tìm thấy xe">
+      <DashboardLayout title={isEn ? "Vehicle Not Found" : "Không tìm thấy xe"}>
         <div className="card">
-          <p className="mb-16">Không tìm thấy thông tin xe yêu cầu.</p>
-          <Link to="/customer/search" className="btn btn-signal">← Quay lại tìm xe</Link>
+          <p className="mb-16">{isEn ? "Requested vehicle details not found." : "Không tìm thấy thông tin xe yêu cầu."}</p>
+          <Link to="/customer/search" className="btn btn-signal">
+            ← {isEn ? "Back to Find Cars" : "Quay lại tìm xe"}
+          </Link>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Đặt xe" subtitle={`Bước 1/2 · ${vehicle.name}`}>
+    <DashboardLayout title={t("Đặt xe", "Book Vehicle")} subtitle={isEn ? `Step 1/2 · ${vehicle.name}` : `Bước 1/2 · ${vehicle.name}`}>
       <Link to={`/customer/vehicles/${vehicle.id || vehicle._id}`} className="link text-sm">
-        ← Quay lại chi tiết xe
+        ← {isEn ? "Back to vehicle details" : "Quay lại chi tiết xe"}
       </Link>
 
       <div className="detail-hero mt-16">
@@ -99,25 +103,27 @@ export default function Booking() {
           />
           <div style={{ fontWeight: 700, fontSize: 17, fontFamily: "var(--font-display)" }}>{vehicle.name}</div>
           <div className="text-muted text-sm mt-8">
-            {vehicle.brand} · {vehicle.type} · {vehicle.seats} chỗ · {vehicle.location}
+            {vehicle.brand} · {t(vehicle.type)} · {vehicle.seats} {isEn ? "seats" : "chỗ"} · {vehicle.location}
           </div>
 
           <div className="lane-divider mt-16 mb-16" style={{ opacity: 0.4 }} />
 
           <div style={{ fontSize: 13 }}>
             <div className="flex-between mb-8">
-              <span className="text-muted">Giá theo giờ:</span>
+              <span className="text-muted">{isEn ? "Hourly Rate:" : "Giá theo giờ:"}</span>
               <strong className="mono">{formatVND(pricePerHour)}/h</strong>
             </div>
             <div className="flex-between">
-              <span className="text-muted">Giá theo ngày:</span>
-              <strong className="mono">{formatVND(vehicle.pricePerDay)}/ngày</strong>
+              <span className="text-muted">{isEn ? "Daily Rate:" : "Giá theo ngày:"}</span>
+              <strong className="mono">{formatVND(vehicle.pricePerDay)}/{isEn ? "day" : "ngày"}</strong>
             </div>
           </div>
         </div>
 
         <form className="card" onSubmit={handleContinue}>
-          <h3 style={{ fontSize: 16, marginBottom: 14 }}>Hình thức thuê xe</h3>
+          <h3 style={{ fontSize: 16, marginBottom: 14 }}>
+            {isEn ? "Rental Type" : "Hình thức thuê xe"}
+          </h3>
 
           {/* Type Toggle */}
           <div className="role-toggle mb-16">
@@ -126,14 +132,14 @@ export default function Booking() {
               className={rentalType === "day" ? "active" : ""}
               onClick={() => setRentalType("day")}
             >
-              📅 Thuê theo ngày (Trọn gói)
+              📅 {isEn ? "Daily Rental (Package)" : "Thuê theo ngày (Trọn gói)"}
             </button>
             <button
               type="button"
               className={rentalType === "hour" ? "active" : ""}
               onClick={() => setRentalType("hour")}
             >
-              ⏱️ Thuê theo giờ (Linh hoạt)
+              ⏱️ {isEn ? "Hourly Rental (Flexible)" : "Thuê theo giờ (Linh hoạt)"}
             </button>
           </div>
 
@@ -142,7 +148,7 @@ export default function Booking() {
           {rentalType === "day" ? (
             <div className="form-row">
               <div className="field">
-                <label>Ngày nhận xe</label>
+                <label>{isEn ? "Pickup Date" : "Ngày nhận xe"}</label>
                 <input
                   className="input"
                   type="date"
@@ -153,7 +159,7 @@ export default function Booking() {
                 />
               </div>
               <div className="field">
-                <label>Ngày trả xe</label>
+                <label>{isEn ? "Return Date" : "Ngày trả xe"}</label>
                 <input
                   className="input"
                   type="date"
@@ -168,7 +174,7 @@ export default function Booking() {
             <>
               <div className="form-row">
                 <div className="field">
-                  <label>Ngày thuê xe</label>
+                  <label>{isEn ? "Rental Date" : "Ngày thuê xe"}</label>
                   <input
                     className="input"
                     type="date"
@@ -179,7 +185,7 @@ export default function Booking() {
                   />
                 </div>
                 <div className="field">
-                  <label>Giờ bắt đầu</label>
+                  <label>{isEn ? "Start Time" : "Giờ bắt đầu"}</label>
                   <input
                     className="input"
                     type="time"
@@ -190,27 +196,27 @@ export default function Booking() {
                 </div>
               </div>
               <div className="field">
-                <label>Số giờ thuê dự kiến</label>
+                <label>{isEn ? "Estimated Hours" : "Số giờ thuê dự kiến"}</label>
                 <select
                   className="input"
                   value={rentHours}
                   onChange={(e) => setRentHours(Number(e.target.value))}
                 >
-                  <option value={2}>2 giờ (Ngắn hạn trong phố)</option>
-                  <option value={4}>4 giờ (Nửa buổi)</option>
-                  <option value={6}>6 giờ (Gặp đối tác / di chuyển)</option>
-                  <option value={8}>8 giờ (Một ngày làm việc)</option>
-                  <option value={12}>12 giờ (Cả ngày)</option>
+                  <option value={2}>2 {isEn ? "hours (Short city trip)" : "giờ (Ngắn hạn trong phố)"}</option>
+                  <option value={4}>4 {isEn ? "hours (Half day)" : "giờ (Nửa buổi)"}</option>
+                  <option value={6}>6 {isEn ? "hours (Client meeting / travel)" : "giờ (Gặp đối tác / di chuyển)"}</option>
+                  <option value={8}>8 {isEn ? "hours (Full workday)" : "giờ (Một ngày làm việc)"}</option>
+                  <option value={12}>12 {isEn ? "hours (All day)" : "giờ (Cả ngày)"}</option>
                 </select>
               </div>
             </>
           )}
 
           <div className="field mt-8">
-            <label>Mã khuyến mãi (nếu có)</label>
+            <label>{isEn ? "Discount Code (Optional)" : "Mã khuyến mãi (nếu có)"}</label>
             <input
               className="input"
-              placeholder="VD: MORENT10 hoặc SUMMER15"
+              placeholder={isEn ? "e.g., MORENT10 or SUMMER15" : "VD: MORENT10 hoặc SUMMER15"}
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
             />
@@ -221,28 +227,28 @@ export default function Booking() {
           <div className="flex-between text-sm mb-8">
             <span className="text-muted">
               {rentalType === "hour"
-                ? `${formatVND(pricePerHour)} × ${rentHours} giờ`
-                : `${formatVND(vehicle.pricePerDay)} × ${days} ngày`}
+                ? `${formatVND(pricePerHour)} × ${rentHours} ${isEn ? "hours" : "giờ"}`
+                : `${formatVND(vehicle.pricePerDay)} × ${days} ${isEn ? "days" : "ngày"}`}
             </span>
             <span className="mono">{formatVND(subtotal)}</span>
           </div>
 
           {promo && (
             <div className="flex-between text-sm mb-8" style={{ color: "var(--success)" }}>
-              <span>Mã {promo.code} (-{promo.discountPercent}%)</span>
+              <span>{isEn ? `Code ${promo.code} (-${promo.discountPercent}%)` : `Mã ${promo.code} (-${promo.discountPercent}%)`}</span>
               <span className="mono">-{formatVND(discount)}</span>
             </div>
           )}
 
           <div className="flex-between mb-16" style={{ fontWeight: 700, fontSize: 16 }}>
-            <span>Tổng cộng</span>
+            <span>{isEn ? "Total Amount" : "Tổng cộng"}</span>
             <span className="mono" style={{ color: "var(--signal-dark)", fontSize: 18 }}>
               {formatVND(total)}
             </span>
           </div>
 
           <button className="btn btn-signal btn-block" style={{ padding: 12, fontSize: 15 }}>
-            Tiếp tục đến thanh toán →
+            {isEn ? "Proceed to Payment →" : "Tiếp tục đến thanh toán →"}
           </button>
         </form>
       </div>

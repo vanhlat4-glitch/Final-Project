@@ -1,3 +1,5 @@
+import { useLanguage } from "../../hooks/useLanguage";
+
 const TONE_CLASS = {
   neutral: "badge-neutral",
   success: "badge-success",
@@ -7,5 +9,7 @@ const TONE_CLASS = {
 };
 
 export default function Badge({ children, tone = "neutral" }) {
-  return <span className={`badge ${TONE_CLASS[tone] || TONE_CLASS.neutral}`}>{children}</span>;
+  const { t } = useLanguage();
+  const text = typeof children === "string" ? t(children) : children;
+  return <span className={`badge ${TONE_CLASS[tone] || TONE_CLASS.neutral}`}>{text}</span>;
 }
