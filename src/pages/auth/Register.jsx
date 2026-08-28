@@ -18,8 +18,8 @@ export default function Register() {
   const navigate = useNavigate();
 
   const ROLE_TABS = [
-    { value: ROLES.CUSTOMER, label: t("role_customer", "Khách hàng") },
-    { value: ROLES.PROVIDER, label: t("role_provider", "Nhà cung cấp xe") },
+    { value: ROLES.CUSTOMER, icon: "👤", label: t("role_customer", "Khách hàng (Thuê xe)") },
+    { value: ROLES.PROVIDER, icon: "🔑", label: t("role_provider", "Nhà cung cấp (Cho thuê xe)") },
   ];
 
   async function handleSubmit(e) {
@@ -101,6 +101,7 @@ export default function Register() {
                 className={role === tTab.value ? "active" : ""}
                 onClick={() => setRole(tTab.value)}
               >
+                <span style={{ marginRight: 6 }}>{tTab.icon}</span>
                 {tTab.label}
               </button>
             ))}

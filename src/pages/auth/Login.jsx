@@ -18,9 +18,9 @@ export default function Login() {
   const navigate = useNavigate();
 
   const ROLE_TABS = [
-    { value: ROLES.CUSTOMER, label: t("role_customer", "Khách hàng") },
-    { value: ROLES.PROVIDER, label: t("role_provider", "Nhà cung cấp") },
-    { value: ROLES.ADMIN, label: t("role_admin", "Quản trị viên") },
+    { value: ROLES.CUSTOMER, icon: "👤", label: t("role_customer", "Khách hàng") },
+    { value: ROLES.PROVIDER, icon: "🔑", label: t("role_provider", "Nhà cung cấp (Cho thuê)") },
+    { value: ROLES.ADMIN, icon: "🛡️", label: t("role_admin", "Quản trị viên") },
   ];
 
   async function handleSubmit(e) {
@@ -97,6 +97,7 @@ export default function Login() {
                 className={role === tTab.value ? "active" : ""}
                 onClick={() => setRole(tTab.value)}
               >
+                <span style={{ marginRight: 6 }}>{tTab.icon}</span>
                 {tTab.label}
               </button>
             ))}
