@@ -85,6 +85,25 @@ export default function Booking() {
     );
   }
 
+  if (vehicle.status !== "approved") {
+    return (
+      <DashboardLayout title={isEn ? "Vehicle Unavailable" : "Xe tạm thời không thể đặt"}>
+        <div className="card">
+          <p className="mb-16">
+            {vehicle.status === "maintenance"
+              ? (isEn ? "This vehicle is currently undergoing maintenance and is not accepting bookings." : "Xe này đang trong quá trình bảo dưỡng / sửa chữa và tạm thời không nhận đặt lịch thuê.")
+              : vehicle.status === "paused"
+              ? (isEn ? "The vehicle owner has temporarily paused rentals for this car." : "Chủ xe hiện đang tạm ngưng cho thuê xe này.")
+              : (isEn ? "This vehicle is currently unavailable for booking." : "Xe này hiện tại chưa sẵn sàng để đặt thuê.")}
+          </p>
+          <Link to="/customer/search" className="btn btn-signal">
+            ← {isEn ? "Find Another Car" : "Tìm xe khác"}
+          </Link>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title={t("Đặt xe", "Book Vehicle")} subtitle={isEn ? `Step 1/2 · ${vehicle.name}` : `Bước 1/2 · ${vehicle.name}`}>
       <Link to={`/customer/vehicles/${vehicle.id || vehicle._id}`} className="link text-sm">

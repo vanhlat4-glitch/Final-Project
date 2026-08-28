@@ -176,9 +176,50 @@ export default function VehicleDetail() {
               </ul>
             </div>
 
-            <Link to={`/customer/booking/${vehicle.id || vehicle._id}`} className="btn btn-signal btn-block" style={{ padding: "12px 16px", fontSize: 15, textAlign: "center" }}>
-              {isEn ? "Book This Car Now →" : "Đặt thuê xe này ngay →"}
-            </Link>
+            {vehicle.status === "maintenance" && (
+              <div className="card mb-16" style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid var(--warning)", color: "#b45309", padding: "12px 14px", borderRadius: 8 }}>
+                <strong>⚠️ {isEn ? "Vehicle Under Maintenance" : "Xe đang sửa chữa / bảo trì"}</strong>
+                <p className="text-sm mt-4" style={{ color: "var(--ink)" }}>
+                  {isEn
+                    ? "This vehicle is currently undergoing maintenance or repairs and is temporarily unavailable for rent."
+                    : "Xe này hiện đang trong quá trình bảo dưỡng / sửa chữa kỹ thuật và tạm thời chưa nhận đặt lịch thuê mới."}
+                </p>
+              </div>
+            )}
+
+            {vehicle.status === "paused" && (
+              <div className="card mb-16" style={{ background: "rgba(107, 114, 128, 0.1)", border: "1px solid var(--muted)", color: "var(--ink)", padding: "12px 14px", borderRadius: 8 }}>
+                <strong>⏸️ {isEn ? "Rental Paused by Owner" : "Tạm ngưng cho thuê"}</strong>
+                <p className="text-sm mt-4 text-muted">
+                  {isEn
+                    ? "The vehicle owner has temporarily paused rental bookings for this vehicle."
+                    : "Chủ xe hiện đang tạm ngưng nhận đặt lịch thuê cho xe này."}
+                </p>
+              </div>
+            )}
+
+            {vehicle.status !== "approved" && vehicle.status !== "maintenance" && vehicle.status !== "paused" && (
+              <div className="card mb-16" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid var(--danger)", color: "var(--danger)", padding: "12px 14px", borderRadius: 8 }}>
+                <strong>⛔ {isEn ? "Vehicle Unavailable" : "Xe chưa sẵn sàng"}</strong>
+                <p className="text-sm mt-4 text-muted">
+                  {isEn ? "This vehicle is pending approval or currently not active." : "Xe đang chờ duyệt hoặc chưa sẵn sàng cho thuê."}
+                </p>
+              </div>
+            )}
+
+            {vehicle.status === "approved" ? (
+              <Link to={`/customer/booking/${vehicle.id || vehicle._id}`} className="btn btn-signal btn-block" style={{ padding: "12px 16px", fontSize: 15, textAlign: "center" }}>
+                {isEn ? "Book This Car Now →" : "Đặt thuê xe này ngay →"}
+              </Link>
+            ) : (
+              <button disabled className="btn btn-block" style={{ padding: "12px 16px", fontSize: 15, opacity: 0.6, cursor: "not-allowed", background: "var(--paper)", border: "1px solid var(--line)" }}>
+                {vehicle.status === "maintenance"
+                  ? (isEn ? "Under Maintenance" : "Đang sửa chữa / Bảo trì")
+                  : vehicle.status === "paused"
+                  ? (isEn ? "Temporarily Paused" : "Tạm ngưng cho thuê")
+                  : (isEn ? "Unavailable for Booking" : "Tạm thời không thể đặt")}
+              </button>
+            )}
           </div>
         </div>
       </div>
