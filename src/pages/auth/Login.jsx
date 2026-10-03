@@ -23,14 +23,25 @@ export default function Login() {
     { value: ROLES.ADMIN, icon: "🛡️", label: t("role_admin", "Quản trị viên") },
   ];
 
+  const [securityAlert, setSecurityAlert] = useState(null);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setSecurityAlert(null);
     setLoading(true);
     const res = await login({ ...form, role });
     setLoading(false);
-    if (!res.ok) return setError(res.message);
-    navigate(`/${role}`);
+    if (!res.ok) {
+      if (res.isBlocked) {
+        return setSecurityAlert(res);
+      }
+      return setError(res.message);
+    }
+    if (res.isBypassed) {
+      alert("⚠️ [CẢNH BÁO LỖ HỔNG SQL INJECTION]\nBạn đã đăng nhập thành công vào quyền Quản trị viên (Admin) thông qua lỗi SQL Injection ghép chuỗi mà không cần mật khẩu chính xác!");
+    }
+    navigate(`/${res.user?.role || role}`);
   }
 
   return (
@@ -103,25 +114,75 @@ export default function Login() {
             ))}
           </div>
 
+          {securityAlert && (
+            <div style={{
+              background: "rgba(220, 38, 38, 0.1)",
+              border: "1.5px solid var(--danger, #dc2626)",
+              borderRadius: "8px",
+              padding: "12px 14px",
+              marginBottom: "16px",
+              fontSize: "13px"
+            }}>
+              <div style={{ fontWeight: "700", color: "var(--danger)", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>🛑</span> PHÁT HIỆN TẤN CÔNG SQL INJECTION!
+              </div>
+              <div style={{ margin: "6px 0", color: "var(--ink)" }}>{securityAlert.detail}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--muted)" }}>
+                <span>Kỹ thuật: <strong>{securityAlert.attackType}</strong></span>
+                <span>Độ tin cậy AI: <strong style={{ color: "var(--danger)" }}>{securityAlert.confidence}%</strong></span>
+              </div>
+            </div>
+          )}
+
           {error && <div className="form-error">{error}</div>}
+
+          {/* Nút bấm nhanh để demo trước mặt giảng viên */}
+          <div style={{ marginBottom: "16px", padding: "10px", background: "var(--paper-3)", borderRadius: "8px", border: "1px dashed var(--line-strong)" }}>
+            <div style={{ fontSize: "11px", fontWeight: "600", color: "var(--muted)", marginBottom: "6px" }}>
+              🧪 MẪU DEMO BẢO MẬT & SQL INJECTION:
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              <button
+                type="button"
+                onClick={() => setForm({ email: "' OR 1=1 --", password: "123" })}
+                style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line-strong)", background: "var(--paper-2)", cursor: "pointer" }}
+              >
+                ⚡ ' OR 1=1 -- (Bypass)
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ email: "admin@morent.vn' --", password: "arbitrary" })}
+                style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line-strong)", background: "var(--paper-2)", cursor: "pointer" }}
+              >
+                ⚡ admin' -- (Comment bypass)
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ email: "admin@morent.vn", password: "admin123" })}
+                style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line-strong)", background: "var(--paper-2)", cursor: "pointer" }}
+              >
+                🔑 Admin chuẩn
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit}>
             <div className="field">
               <label>{t("email_label", "Email")}</label>
               <input
                 className="input"
-                type="email"
+                type="text"
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="name@example.com"
+                placeholder="name@example.com hoặc chuỗi test SQLi"
               />
             </div>
             <div className="field">
               <label>{t("password_label", "Mật khẩu")}</label>
               <input
                 className="input"
-                type="password"
+                type="text"
                 required
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}

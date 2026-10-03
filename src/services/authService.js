@@ -28,6 +28,50 @@ function resourceForRole(role) {
 }
 
 export async function loginUser({ email, password, role }) {
+  // 1. Thử xác thực qua Backend CSDL SQL & Mô hình AI phòng thủ
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+
+    // Trường hợp 1: Mô hình AI phát hiện SQLi và chặn đứng (403 Forbidden)
+    if (res.status === 403) {
+      return {
+        ok: false,
+        isBlocked: true,
+        message: `🛑 [AI WAF BLOCKED] ${data.error}`,
+        detail: data.explanation,
+        attackType: data.attackType,
+        confidence: data.confidence,
+      };
+    }
+
+    // Trường hợp 2: Chế độ Vulnerable Mode bị tấn công bypass thành công hoặc đăng nhập hợp lệ
+    if (res.ok && data.success && data.user) {
+      return {
+        ok: true,
+        user: {
+          id: data.user.id,
+          name: data.user.fullName,
+          email: data.user.email,
+          role: data.user.role || role,
+        },
+        isBypassed: data.isBypassed,
+      };
+    }
+
+    if (res.status === 401) {
+      return { ok: false, message: data.error || "Sai email hoặc mật khẩu" };
+    }
+  } catch (err) {
+    console.warn("Backend bảo mật chưa bật hoặc không thể kết nối, dùng fallback local:", err);
+  }
+
+  // 2. Fallback dự phòng nếu chưa bật server Python
   if (role === ROLES.ADMIN) {
     if (email === ADMIN_ACCOUNT.email && password === ADMIN_ACCOUNT.password) {
       return { ok: true, user: { id: "admin", name: ADMIN_ACCOUNT.name, email } };

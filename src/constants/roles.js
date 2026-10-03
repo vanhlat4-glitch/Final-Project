@@ -8,6 +8,7 @@ export const ROLES = {
 export const NAV_BY_ROLE = {
   admin: [
     { to: "/admin", key: "nav_admin_overview", label: "Tổng quan", icon: "dashboard", end: true },
+    { to: "/admin/security", key: "nav_admin_security", label: "🛡️ Giám sát SQLi & AI", icon: "shield" },
     { to: "/admin/providers", key: "nav_admin_providers", label: "Nhà cung cấp xe", icon: "store" },
     { to: "/admin/customers", key: "nav_admin_customers", label: "Khách hàng", icon: "users" },
     { to: "/admin/vehicles", key: "nav_admin_vehicles", label: "Danh sách xe", icon: "car" },

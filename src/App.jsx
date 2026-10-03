@@ -23,6 +23,7 @@ import SupportManagement from "./pages/admin/SupportManagement";
 import FinancialManagement from "./pages/admin/FinancialManagement";
 import Report from "./pages/admin/Report";
 import AccessControl from "./pages/admin/AccessControl";
+import SecurityMonitor from "./pages/admin/SecurityMonitor";
 
 import ProviderDashboard from "./pages/provider/Dashboard";
 import PostCar from "./pages/provider/PostCar";
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="/admin/finance" element={<Guard role={ROLES.ADMIN}><FinancialManagement /></Guard>} />
               <Route path="/admin/reports" element={<Guard role={ROLES.ADMIN}><Report /></Guard>} />
               <Route path="/admin/access-control" element={<Guard role={ROLES.ADMIN}><AccessControl /></Guard>} />
+              <Route path="/admin/security" element={<Guard role={ROLES.ADMIN}><SecurityMonitor /></Guard>} />
 
               {/* Provider */}
               <Route path="/provider" element={<Guard role={ROLES.PROVIDER}><ProviderDashboard /></Guard>} />

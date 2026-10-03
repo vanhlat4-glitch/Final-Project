@@ -17,6 +17,45 @@ export default function SearchVehicle() {
   const [fuel, setFuel] = useState("all");
   const [seats, setSeats] = useState("all");
   const [sort, setSort] = useState("default");
+  const [sqliWarning, setSqliWarning] = useState(null);
+  const [searchingBackend, setSearchingBackend] = useState(false);
+
+  // Gửi truy vấn tìm kiếm sang Backend AI SQLi Defense
+  async function triggerSearchSecurity(searchQuery) {
+    if (!searchQuery) {
+      setSqliWarning(null);
+      return;
+    }
+    setSearchingBackend(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/vehicles/search?query=${encodeURIComponent(searchQuery)}`);
+      if (res.status === 403) {
+        const data = await res.json();
+        setSqliWarning({
+          type: "blocked",
+          title: "🛑 PHÁT HIỆN & CHẶN ĐỨNG TẤN CÔNG SQL INJECTION!",
+          message: data.explanation || data.error,
+          attackType: data.attackType,
+          confidence: data.confidence,
+          payload: searchQuery
+        });
+      } else if (res.status === 500) {
+        const data = await res.json();
+        setSqliWarning({
+          type: "vulnerable",
+          title: "⚠️ LỖ HỔNG BỊ KHAI THÁC THÀNH CÔNG (VULNERABLE MODE)!",
+          message: `Lỗi CSDL bị rò rỉ: ${data.error}`,
+          rawSql: data.raw_sql
+        });
+      } else {
+        setSqliWarning(null);
+      }
+    } catch (err) {
+      console.warn("Không kết nối được server bảo mật:", err);
+    } finally {
+      setSearchingBackend(false);
+    }
+  }
 
   const approved = useMemo(() => vehicles.filter((v) => v.status === "approved"), [vehicles]);
   const brands = useMemo(() => ["all", ...new Set(approved.map((v) => v.brand).filter(Boolean))], [approved]);
@@ -59,12 +98,81 @@ export default function SearchVehicle() {
       }
     >
       <div className="card mb-16">
+        {/* Hộp thông báo kết quả kiểm tra SQL Injection */}
+        {sqliWarning && (
+          <div style={{
+            padding: "14px 18px",
+            borderRadius: "10px",
+            marginBottom: "14px",
+            border: `1.5px solid ${sqliWarning.type === "blocked" ? "var(--danger)" : "var(--signal-dark)"}`,
+            background: sqliWarning.type === "blocked" ? "rgba(220, 38, 38, 0.08)" : "rgba(255, 176, 32, 0.08)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+              <div style={{ fontWeight: "700", color: sqliWarning.type === "blocked" ? "var(--danger)" : "var(--signal-dark)", fontSize: "15px" }}>
+                {sqliWarning.title}
+              </div>
+              {sqliWarning.confidence && (
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--danger)" }}>
+                  Độ tin cậy AI: {sqliWarning.confidence}%
+                </span>
+              )}
+            </div>
+            <p style={{ margin: "6px 0", fontSize: "13px", color: "var(--ink)" }}>{sqliWarning.message}</p>
+            {sqliWarning.rawSql && (
+              <pre style={{ margin: "6px 0 0", padding: "8px", background: "var(--paper-2)", borderRadius: "6px", fontSize: "12px", overflowX: "auto" }}>
+                <code>{sqliWarning.rawSql}</code>
+              </pre>
+            )}
+          </div>
+        )}
+
+        {/* Nút bấm nhanh để demo trước mặt giảng viên */}
+        <div style={{ marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)" }}>🧪 Demo SQLi:</span>
+          <button
+            type="button"
+            onClick={() => {
+              const payload = "' OR '1'='1";
+              setQ(payload);
+              triggerSearchSecurity(payload);
+            }}
+            style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line-strong)", background: "var(--paper-3)", cursor: "pointer" }}
+          >
+            ⚡ ' OR '1'='1
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const payload = "' UNION SELECT Id, FullName, Email, Password, '0', '0', '0' FROM Users --";
+              setQ(payload);
+              triggerSearchSecurity(payload);
+            }}
+            style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line-strong)", background: "var(--paper-3)", cursor: "pointer" }}
+          >
+            ⚡ ' UNION SELECT Users --
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const payload = "Rolls-Royce";
+              setQ(payload);
+              triggerSearchSecurity(payload);
+            }}
+            style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line-strong)", background: "var(--paper-3)", cursor: "pointer" }}
+          >
+            ✅ Rolls-Royce (An toàn)
+          </button>
+        </div>
+
         <div className="filters-bar" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
           <input
             className="input"
-            placeholder={isEn ? "🔍 Search car, brand, location..." : "🔍 Tìm xe, hãng, khu vực..."}
+            placeholder={isEn ? "🔍 Search car, brand, or test SQLi..." : "🔍 Tìm xe, hãng, hoặc test SQLi..."}
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              setQ(e.target.value);
+              triggerSearchSecurity(e.target.value);
+            }}
           />
           <select className="input" value={brand} onChange={(e) => setBrand(e.target.value)}>
             <option value="all">🚗 {isEn ? "All Brands" : "Tất cả hãng xe"}</option>
