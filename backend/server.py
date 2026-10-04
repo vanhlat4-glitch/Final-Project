@@ -8,7 +8,7 @@ import os
 import sys
 import json
 import datetime
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import joblib
 
@@ -40,7 +40,7 @@ SYSTEM_PROTECTED = True
 # 2. KẾT NỐI TRỰC TIẾP CƠ SỞ DỮ LIỆU MICROSOFT SQL SERVER (SSMS)
 MSSQL_CONN_STR = (
     "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=localhost\\SQLEXPRESS02;"
+    "SERVER=.\\SQLEXPRESS02;"
     "DATABASE=MorentDB;"
     "Trusted_Connection=yes;"
 )
@@ -403,7 +403,7 @@ class SQLiDefenseHandler(BaseHTTPRequestHandler):
 
 def run_server(port=5000):
     server_address = ('', port)
-    httpd = HTTPServer(server_address, SQLiDefenseHandler)
+    httpd = ThreadingHTTPServer(server_address, SQLiDefenseHandler)
     print("=" * 65)
     print(f" MÁY CHỦ BẢO MẬT & PHÒNG CHỐNG SQLi ĐANG CHẠY TẠI:")
     print(f" http://localhost:{port}")
