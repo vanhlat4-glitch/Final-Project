@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import datetime
+import mimetypes
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import joblib
@@ -20,6 +21,7 @@ if sys.platform.startswith('win'):
         pass
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+DIST_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "..", "dist"))
 MODEL_PATH = os.path.join(CURRENT_DIR, "sqli_model.pkl")
 VEC_PATH = os.path.join(CURRENT_DIR, "vectorizer.pkl")
 SQLITE_DB = os.path.join(CURRENT_DIR, "morent.db")
@@ -31,9 +33,17 @@ try:
     sqli_vec = joblib.load(VEC_PATH)
     print("[✓] Đã nạp thành công mô hình AI (TF-IDF + Logistic Regression).")
 except Exception as e:
-    print(f"[!] Cảnh báo không tìm thấy model đã train: {e}. Vui lòng chạy train_model.py trước.")
-    sqli_model = None
-    sqli_vec = None
+    print(f"[!] Đang tự động huấn luyện lại mô hình AI cho môi trường hiện tại ({e})...")
+    try:
+        import subprocess
+        subprocess.run([sys.executable, os.path.join(CURRENT_DIR, "train_model.py")], check=True)
+        sqli_model = joblib.load(MODEL_PATH)
+        sqli_vec = joblib.load(VEC_PATH)
+        print("[✓] Đã huấn luyện và nạp thành công mô hình AI.")
+    except Exception as train_err:
+        print(f"[!] Cảnh báo không thể nạp model: {train_err}")
+        sqli_model = None
+        sqli_vec = None
 
 SYSTEM_PROTECTED = True
 
@@ -291,6 +301,21 @@ class SQLiDefenseHandler(BaseHTTPRequestHandler):
             self._send_json({"vehicles": vehicles})
             return
 
+        # 5. Phục vụ giao diện Frontend (React/Vite dist) khi deploy lên Render / Cloud
+        if not path.startswith("/api") and os.path.isdir(DIST_DIR):
+            rel_path = path.lstrip("/")
+            file_path = os.path.abspath(os.path.join(DIST_DIR, rel_path))
+            if not file_path.startswith(DIST_DIR) or not os.path.isfile(file_path):
+                file_path = os.path.join(DIST_DIR, "index.html")
+            if os.path.isfile(file_path):
+                mime_type, _ = mimetypes.guess_type(file_path)
+                self.send_response(200)
+                self.send_header("Content-Type", mime_type or "text/html; charset=utf-8")
+                self.end_headers()
+                with open(file_path, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
         self._send_json({"error": "Endpoint không tồn tại"}, status_code=404)
 
     def do_POST(self):
@@ -412,7 +437,7 @@ def run_server(port=5000):
     httpd.serve_forever()
 
 if __name__ == "__main__":
-    port = 5000
+    port = int(os.environ.get("PORT", 5000))
     if len(sys.argv) > 1:
         try:
             port = int(sys.argv[1])

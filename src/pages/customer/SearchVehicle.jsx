@@ -8,6 +8,8 @@ import { useLanguage } from "../../hooks/useLanguage";
 import { RESOURCES } from "../../services/api";
 import { formatVND } from "../../utils/formatCurrency";
 
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : "/api");
+
 export default function SearchVehicle() {
   const { items: vehicles, loading } = useApi(RESOURCES.VEHICLES);
   const { t, isEn } = useLanguage();
@@ -28,7 +30,7 @@ export default function SearchVehicle() {
     }
     setSearchingBackend(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/vehicles/search?query=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`${API_BASE}/vehicles/search?query=${encodeURIComponent(searchQuery)}`);
       if (res.status === 403) {
         const data = await res.json();
         setSqliWarning({

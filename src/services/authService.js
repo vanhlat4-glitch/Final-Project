@@ -27,10 +27,12 @@ function resourceForRole(role) {
   return role === ROLES.PROVIDER ? RESOURCES.PROVIDERS : RESOURCES.CUSTOMERS;
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : "/api");
+
 export async function loginUser({ email, password, role }) {
   // 1. Thử xác thực qua Backend CSDL SQL & Mô hình AI phòng thủ
   try {
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
